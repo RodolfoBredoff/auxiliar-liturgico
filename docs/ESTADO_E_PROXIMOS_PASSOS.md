@@ -13,7 +13,7 @@ Fluxo de trabalho: `./publicar.sh status | codigo "msg" | versao patch|minor|maj
 ### 1. Testar a atualização automática (guia: [`PUBLICAR_NO_GITHUB.md`](PUBLICAR_NO_GITHUB.md))
 - [x] Repositório, CI, secret da chave, permissões e `./publicar.sh` prontos.
 - [x] v0.3.0 publicada (tag enviada, as duas compilações passaram, `latest.json` com as 2 plataformas).
-- [ ] **Guardar uma cópia de `~/.tauri/auxiliar.key` em local seguro** (se ainda não fez).
+- [x] Cópia de `~/.tauri/auxiliar.key` guardada em local seguro (confirmado pelo dono do projeto).
 - [ ] Instalar a 0.3.0 pela Release (README, seção Instalar).
 - [ ] Rodar `./publicar.sh versao patch "teste de atualização"` e, no app instalado, ir em Configurações → Atualizações.
       Isso valida de ponta a ponta a assinatura e o `latest.json`.
