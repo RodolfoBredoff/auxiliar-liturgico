@@ -3,23 +3,20 @@
 Arquivo de retomada. Atualizado em **30/10/2026**. Leia este arquivo primeiro ao voltar ao projeto.
 
 ## Onde paramos
-O app está na **versão 0.3.0** e o código está em **https://github.com/RodolfoBredoff/auxiliar-liturgico** (público, branch `main`,
-CI verde). Falta **lançar a v0.3.0** (depende do secret da chave de assinatura no GitHub) e **validar no app aberto**.
+A **v0.3.0 está publicada**: https://github.com/RodolfoBredoff/auxiliar-liturgico/releases/tag/v0.3.0 (Mac chip Apple e Intel, assinada,
+com `latest.json`). Repositório público, branch `main`, CI verde. Falta **testar a atualização automática** e **validar o app aberto**.
 O `AGENTS.md` do MVP foi **descartado e apagado** pelo dono do projeto. O escopo agora é um app profissional.
 Fluxo de trabalho: `./publicar.sh status | codigo "msg" | versao patch|minor|major "msg"` (guia: [`PUBLICAR_NO_GITHUB.md`](PUBLICAR_NO_GITHUB.md)).
 
 ## Pendências, em ordem
 
-### 1. Lançar a v0.3.0 (guia: [`PUBLICAR_NO_GITHUB.md`](PUBLICAR_NO_GITHUB.md))
-- [x] Repositório público criado, código enviado, `tauri.conf.json` apontando para o repositório, CI verde.
-- [x] `.gitignore` deixa de fora PDFs, `app/seed/culto_sede_*.sql`, `.kiro/` e chaves.
-- [x] `./publicar.sh` criado e testado (`status`, `codigo`, `versao`).
-- [ ] **Cadastrar o secret `TAURI_SIGNING_PRIVATE_KEY`** (conteúdo de `~/.tauri/auxiliar.key`) no GitHub. Não criar o secret de senha.
-- [ ] **Marcar Read and write permissions** em Settings → Actions → General → Workflow permissions.
-- [ ] **Guardar uma cópia de `~/.tauri/auxiliar.key` em local seguro.**
-- [ ] `git tag -a v0.3.0 -m "Versão 0.3.0" && git push origin v0.3.0`, esperar o Actions (20 a 30 min).
-- [ ] Conferir o `latest.json` com `curl` (guia, seção "Primeiro lançamento").
-- [ ] Testar a atualização: instalar a 0.3.0, rodar `./publicar.sh versao patch "teste"` e atualizar pelo app.
+### 1. Testar a atualização automática (guia: [`PUBLICAR_NO_GITHUB.md`](PUBLICAR_NO_GITHUB.md))
+- [x] Repositório, CI, secret da chave, permissões e `./publicar.sh` prontos.
+- [x] v0.3.0 publicada (tag enviada, as duas compilações passaram, `latest.json` com as 2 plataformas).
+- [ ] **Guardar uma cópia de `~/.tauri/auxiliar.key` em local seguro** (se ainda não fez).
+- [ ] Instalar a 0.3.0 pela Release (README, seção Instalar).
+- [ ] Rodar `./publicar.sh versao patch "teste de atualização"` e, no app instalado, ir em Configurações → Atualizações.
+      Isso valida de ponta a ponta a assinatura e o `latest.json`.
 
 ### 2. Validar no app aberto (nada disso foi testado com a janela aberta)
 Rodar `cd app && npm run tauri dev` e conferir, com um culto de teste:
