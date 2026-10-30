@@ -1,26 +1,25 @@
 # Estado do projeto e próximos passos
 
-Arquivo de retomada. Atualizado em **29/10/2026**. Leia este arquivo primeiro ao voltar ao projeto.
+Arquivo de retomada. Atualizado em **30/10/2026**. Leia este arquivo primeiro ao voltar ao projeto.
 
 ## Onde paramos
-O app está na **versão 0.3.0**, compilando e empacotado localmente. Falta **publicar no GitHub** e **validar no app aberto**.
-O `AGENTS.md` do MVP foi **descartado e apagado** pelo dono do projeto. O escopo agora é um app profissional,
-não mais um MVP mínimo.
+O app está na **versão 0.3.0** e o código está em **https://github.com/RodolfoBredoff/auxiliar-liturgico** (público, branch `main`,
+CI verde). Falta **lançar a v0.3.0** (depende do secret da chave de assinatura no GitHub) e **validar no app aberto**.
+O `AGENTS.md` do MVP foi **descartado e apagado** pelo dono do projeto. O escopo agora é um app profissional.
+Fluxo de trabalho: `./publicar.sh status | codigo "msg" | versao patch|minor|major "msg"` (guia: [`PUBLICAR_NO_GITHUB.md`](PUBLICAR_NO_GITHUB.md)).
 
 ## Pendências, em ordem
 
-### 1. Publicar no GitHub (guia: [`PUBLICAR_NO_GITHUB.md`](PUBLICAR_NO_GITHUB.md))
-- [ ] Decidir **repositório público ou privado**. Privado desativa a atualização automática dentro do app.
-      Recomendado: público, com `*.pdf` e `app/seed/culto_sede_*.sql` no `.gitignore` antes do primeiro commit.
-- [ ] Criar o repositório (nome sugerido: `auxiliar-liturgico`).
-- [ ] Trocar `SUA-ORG` pelo usuário do GitHub em `app/src-tauri/tauri.conf.json` (`plugins.updater.endpoints`).
-- [ ] Cadastrar o secret `TAURI_SIGNING_PRIVATE_KEY` (conteúdo de `~/.tauri/auxiliar.key`). **Não** criar o secret de senha.
-- [ ] **Guardar uma cópia de `~/.tauri/auxiliar.key` em local seguro.** Se for perdida, os apps instalados não se atualizam mais.
-- [ ] `git init -b main`, conferir `git status` (sem `node_modules`, `target`, `.venv`, `pacote`, `*.key`), commit e push.
-      **O projeto ainda não é um repositório git.**
-- [ ] `git tag v0.3.0 && git push origin v0.3.0`, esperar o Actions, publicar o rascunho da Release.
-- [ ] Conferir o `latest.json` com `curl` (passo 7 do guia).
-- [ ] Testar a atualização: instalar a 0.3.0, publicar a 0.3.1 (`./scripts/bump_version.sh 0.3.1`) e atualizar pelo app.
+### 1. Lançar a v0.3.0 (guia: [`PUBLICAR_NO_GITHUB.md`](PUBLICAR_NO_GITHUB.md))
+- [x] Repositório público criado, código enviado, `tauri.conf.json` apontando para o repositório, CI verde.
+- [x] `.gitignore` deixa de fora PDFs, `app/seed/culto_sede_*.sql`, `.kiro/` e chaves.
+- [x] `./publicar.sh` criado e testado (`status`, `codigo`, `versao`).
+- [ ] **Cadastrar o secret `TAURI_SIGNING_PRIVATE_KEY`** (conteúdo de `~/.tauri/auxiliar.key`) no GitHub. Não criar o secret de senha.
+- [ ] **Marcar Read and write permissions** em Settings → Actions → General → Workflow permissions.
+- [ ] **Guardar uma cópia de `~/.tauri/auxiliar.key` em local seguro.**
+- [ ] `git tag -a v0.3.0 -m "Versão 0.3.0" && git push origin v0.3.0`, esperar o Actions (20 a 30 min).
+- [ ] Conferir o `latest.json` com `curl` (guia, seção "Primeiro lançamento").
+- [ ] Testar a atualização: instalar a 0.3.0, rodar `./publicar.sh versao patch "teste"` e atualizar pelo app.
 
 ### 2. Validar no app aberto (nada disso foi testado com a janela aberta)
 Rodar `cd app && npm run tauri dev` e conferir, com um culto de teste:
@@ -89,3 +88,4 @@ O Rust está em `~/.cargo/bin`. Em um terminal novo, rode `export PATH="$HOME/.c
 | Python do app instalado | `~/Library/Application Support/com.igreja.auxiliar/python` |
 | Backups, logs, contexto do Whisper | mesma pasta, em `backups/`, `logs/` e `whisper_context.json` |
 | Pacote gerado | `pacote/Auxiliar-Liturgico-0.3.0-mac-arm64.zip` |
+| Repositório | `git@github.com:RodolfoBredoff/auxiliar-liturgico.git` (licença GPL v3, escolhida pelo dono) |
