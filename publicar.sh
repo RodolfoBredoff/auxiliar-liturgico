@@ -19,7 +19,7 @@ cd "$(dirname "$0")"
 BRANCH="main"
 MAX_MB=50
 
-erro() { echo "ERRO: $*" >&2; exit 1; }
+erro() { printf 'ERRO: %b\n' "$*" >&2; exit 1; }
 
 url_do_repositorio() {
   git remote get-url origin | sed -E 's#^git@github.com:#https://github.com/#; s#\.git$##'
