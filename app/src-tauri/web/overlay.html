@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Sobreposição — Auxiliar Litúrgico</title>
+<style>
+  /* Fundo transparente: no OBS, use como "Fonte de navegador" 1920x1080 sobre a câmera. */
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  #box { position: fixed; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding: 0 6% 6% 6%; box-sizing: border-box; }
+  #text { margin: 0; width: 100%; white-space: pre-line; line-height: 1.25; overflow-wrap: anywhere; transition: opacity 0.25s; opacity: 0; }
+</style>
+</head>
+<body>
+<div id="box"><p id="text"></p></div>
+<script>
+  const q = location.search;
+  const params = new URLSearchParams(q);
+  const box = document.getElementById("box");
+  const p = document.getElementById("text");
+  let last = "";
+
+  function fit(percent) {
+    const h = box.clientHeight * 0.88;
+    let size = box.clientHeight * percent / 100;
+    p.style.fontSize = size + "px";
+    while (size > 12 && p.offsetHeight > h) { size *= 0.94; p.style.fontSize = size + "px"; }
+  }
+
+  async function tick() {
+    let s;
+    try { s = await (await fetch("/state" + q, { cache: "no-store" })).json(); } catch (e) { return; }
+    const theme = s.theme || {};
+    const show = s.layer === "live" && s.slide && ["song", "text"].includes(s.slide.type);
+    const text = show ? s.slide.text : "";
+    const key = text + JSON.stringify(theme);
+    if (key === last) return;
+    last = key;
+    p.style.opacity = 0;
+    setTimeout(() => {
+      p.textContent = text;
+      p.style.fontFamily = theme.fontFamily || "sans-serif";
+      p.style.color = theme.color || "#fff";
+      p.style.textAlign = theme.align || "center";
+      p.style.textTransform = theme.uppercase ? "uppercase" : "none";
+      p.style.textShadow = theme.shadow === false ? "none" : "0 0.04em 0.12em rgba(0,0,0,0.9)";
+      fit(Number(params.get("size")) || Math.min(theme.fontSize || 9, 8));
+      p.style.opacity = text ? 1 : 0;
+    }, 220);
+  }
+  tick();
+  setInterval(tick, 500);
+  addEventListener("resize", () => { last = ""; });
+</script>
+</body>
+</html>

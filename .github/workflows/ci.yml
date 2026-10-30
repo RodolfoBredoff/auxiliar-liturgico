@@ -1,0 +1,64 @@
+# Testes a cada envio para a branch main e em pull requests.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  frontend-e-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Node 24 executa os testes em TypeScript sem configuração extra.
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Dependências do frontend
+        working-directory: app
+        run: npm ci
+
+      - name: TypeScript e build
+        working-directory: app
+        run: npm run build
+
+      - name: Testes do frontend
+        working-directory: app
+        run: npm test
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Testes do Python
+        run: |
+          pip install numpy
+          python python/test_listen.py
+
+      - name: Versões iguais nos três arquivos
+        run: bash scripts/check_version.sh
+
+  rust:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+
+      - name: Pasta do frontend (o Tauri exige que exista para compilar)
+        run: |
+          mkdir -p app/dist
+          echo '<!doctype html><title>ci</title>' > app/dist/index.html
+
+      - name: Testes do Rust
+        working-directory: app/src-tauri
+        run: cargo test

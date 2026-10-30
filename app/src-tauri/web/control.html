@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Controle — Auxiliar Litúrgico</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background: #111; color: #eee; }
+  header { padding: 10px 14px; background: #1c1c1c; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #b00020; margin-right: 6px; }
+  .dot.on { background: #2ea043; }
+  main { padding: 12px; max-width: 640px; margin: 0 auto; }
+  .screen { background: #000; border: 1px solid #333; border-radius: 8px; padding: 14px; min-height: 110px; white-space: pre-line; font-size: 18px; text-align: center; display: flex; align-items: center; justify-content: center; }
+  .next { margin-top: 8px; padding: 8px 10px; background: #1a1a1a; border-radius: 8px; font-size: 13px; color: #aaa; white-space: pre-line; max-height: 4.5em; overflow: hidden; }
+  .row { display: grid; gap: 8px; margin-top: 10px; }
+  .row.two { grid-template-columns: 1fr 1fr; }
+  .row.four { grid-template-columns: repeat(4, 1fr); }
+  button { font-size: 17px; padding: 14px 8px; border-radius: 10px; border: 1px solid #444; background: #262626; color: #eee; }
+  button.big { font-size: 22px; padding: 22px 8px; }
+  button.primary { background: #2f5bd8; border-color: #2f5bd8; }
+  button.on { background: #7a5b00; border-color: #e0b400; }
+  button:active { filter: brightness(1.4); }
+  .suggestion { margin-top: 10px; padding: 10px; border: 2px solid #e0b400; border-radius: 10px; background: #2b2500; }
+  .suggestion b { display: block; margin-bottom: 8px; }
+  ol { list-style: none; padding: 0; margin: 14px 0 0; }
+  li { padding: 12px 10px; border-bottom: 1px solid #262626; font-size: 16px; }
+  li.sel { background: #1e2a52; border-radius: 8px; }
+  .hint { color: #888; font-size: 13px; }
+</style>
+</head>
+<body>
+<header><span><span class="dot" id="dot"></span><span id="title">Conectando...</span></span><span class="hint" id="listen"></span></header>
+<main>
+  <div class="screen" id="screen">—</div>
+  <div class="next" id="next"></div>
+
+  <div class="suggestion" id="suggestion" hidden>
+    <b id="suggestionText"></b>
+    <div class="row two">
+      <button class="primary" data-cmd="accept">MOSTRAR</button>
+      <button data-cmd="ignore">IGNORAR</button>
+    </div>
+  </div>
+
+  <div class="row two">
+    <button class="big" data-cmd="previous">◀ Voltar</button>
+    <button class="big primary" data-cmd="next">Avançar ▶</button>
+  </div>
+  <div class="row four">
+    <button data-cmd="black" id="b-black">Preto</button>
+    <button data-cmd="clear" id="b-clear">Limpar</button>
+    <button data-cmd="logo" id="b-logo">Logo</button>
+    <button data-cmd="hold" id="b-hold">Auto</button>
+  </div>
+  <ol id="items"></ol>
+</main>
+<script>
+  const q = location.search;
+  const $ = (id) => document.getElementById(id);
+  async function send(cmd) {
+    try { await fetch("/cmd" + q, { method: "POST", body: cmd }); } catch (e) {}
+    if (navigator.vibrate) navigator.vibrate(15);
+    setTimeout(refresh, 150);
+  }
+  document.body.addEventListener("click", (e) => {
+    const cmd = e.target.closest("[data-cmd]")?.dataset.cmd;
+    if (cmd) send(cmd);
+  });
+  async function refresh() {
+    let s;
+    try { s = await (await fetch("/state" + q, { cache: "no-store" })).json(); }
+    catch (e) { $("dot").className = "dot"; $("title").textContent = "Sem conexão"; return; }
+    if (!s.items) { $("dot").className = "dot"; $("title").textContent = "Nenhum culto em execução"; return; }
+    $("dot").className = "dot on";
+    $("title").textContent = s.service || "Culto";
+    $("listen").textContent = s.listening ? "🎤 ouvindo" : "🎤 pausado";
+    $("screen").textContent = s.layer !== "live" ? "(" + ({black:"preto",clear:"sem texto",logo:"logo"}[s.layer]) + ")" : (s.slide && s.slide.text) || "—";
+    $("next").textContent = s.next ? "A seguir: " + s.next : "";
+    $("b-black").className = s.layer === "black" ? "on" : "";
+    $("b-clear").className = s.layer === "clear" ? "on" : "";
+    $("b-logo").className = s.layer === "logo" ? "on" : "";
+    $("b-hold").className = s.hold ? "on" : "";
+    $("b-hold").textContent = s.hold ? "Auto: off" : "Auto";
+    $("suggestion").hidden = !s.suggestion;
+    $("suggestionText").textContent = s.suggestion || "";
+    const list = $("items");
+    const key = JSON.stringify([s.items, s.item]);
+    if (list.dataset.key !== key) {
+      list.dataset.key = key;
+      list.textContent = "";
+      for (const it of s.items) {
+        const li = document.createElement("li");
+        li.textContent = it.title;
+        if (it.i === s.item) li.className = "sel";
+        li.addEventListener("click", () => send("goto:" + it.i));
+        list.appendChild(li);
+      }
+    }
+  }
+  refresh();
+  setInterval(refresh, 800);
+</script>
+</body>
+</html>

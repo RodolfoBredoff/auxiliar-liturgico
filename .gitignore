@@ -1,0 +1,27 @@
+# Python (escuta local)
+.venv/
+
+# Pacote de instalação gerado
+pacote/
+
+# macOS
+.DS_Store
+
+# Áudios e transcrições de teste (opcionais; regenere com listen.py --file)
+test_audio/
+
+# App: dependências e build (app/.gitignore cobre node_modules/dist; target fica em src-tauri)
+app/dist/
+# Cópia antiga do código-fonte dentro do projeto
+auxiliar-liturgico-fonte-*/
+# Chaves de assinatura nunca vão para o repositório
+*.key
+# Python
+__pycache__/
+*.pyc
+# Conteúdo da igreja (repositório público: não publicar)
+*.pdf
+app/seed/culto_sede_*.sql
+app/seed/meu_*.sql
+# Configurações pessoais da IDE
+.kiro/

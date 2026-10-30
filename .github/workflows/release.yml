@@ -1,0 +1,90 @@
+# Compila o app para Mac (Apple Silicon e Intel) e publica a Release ao enviar uma tag v*.
+# A Release leva o app, a assinatura e o latest.json usado pela atualização automática.
+# Passo a passo: docs/PUBLICAR_NO_GITHUB.md
+#
+# Só macOS: o bundle do app (tauri.conf.json: targets ["app"]) é do Mac. Para Windows ou Linux seria
+# preciso acrescentar os alvos msi/nsis/deb/appimage e testar o Python de cada sistema.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Conferir versão x tag
+        run: ./scripts/check_version.sh "${{ github.ref_name }}"
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Cache do Rust
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+
+      - name: Instalar dependências do frontend
+        working-directory: app
+        run: npm ci
+
+      - name: Build and release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Assinatura das atualizações automáticas (obrigatória: tauri.conf.json usa createUpdaterArtifacts).
+          # Cadastre o secret TAURI_SIGNING_PRIVATE_KEY (veja docs/PUBLICAR_NO_GITHUB.md).
+          # A chave não tem senha: NÃO crie o secret de senha (o GitHub não aceita valor vazio).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Assinatura e notarização do macOS (opcional, exige conta Apple Developer paga).
+          # Descomente depois de criar os secrets; deixar ativo sem eles quebra o build.
+          # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: app
+          tagName: ${{ github.ref_name }}
+          releaseName: "Auxiliar Litúrgico ${{ github.ref_name }}"
+          releaseBody: |
+            ## Instalação (Mac)
+            1. Baixe o arquivo `.app.tar.gz` do seu Mac: `aarch64` para chip Apple (M1, M2, M3...) ou `x64` para Mac Intel.
+            2. Descompacte e arraste **Auxiliar Litúrgico** para a pasta Aplicativos.
+            3. Na primeira vez: botão direito no app → Abrir (o app não é assinado pela Apple).
+            4. Em Configurações, clique em **Preparar reconhecimento de voz**.
+
+            Quem já tem o app instalado recebe esta versão em **Configurações → Atualizações**.
+
+            Manual: https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/MANUAL.md
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
